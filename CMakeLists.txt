@@ -11,8 +11,6 @@ set(PICO_EXTRAS_PATH "../lib/pico-extras")
 include(cmake/pico_sdk_import.cmake)
 include(cmake/pico_extras_import.cmake)
 
-# set(PICO_BOARD datanoisetv_rp2040_dsp)
-
 set(FREERTOS_SRC_DIRECTORY "${PICO_SDK_PATH}/lib/tinyusb/lib/FreeRTOS-Kernel")
 
 add_library(FreeRTOS STATIC
@@ -41,22 +39,25 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} ".")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_BINARY_DIR} lib/pico-extras/src/rp2_common/pico_sleep/include ".")
 
 # add_subdirectory(lib/audio)
 
 add_executable(main
     src/freertos_utils.cpp
     src/main.cpp 
+    lib/pico-extras/src/rp2_common/pico_sleep/sleep.c
 
 )
 
 add_subdirectory(lib/oled_ssd1306)
+add_subdirectory(lib/RF24)
 
 pico_set_program_name(main "main")
 pico_set_program_version(main "0.1")
 
-pico_enable_stdio_uart(main 1)
+# uart disabled to get more gpio and USB doesn't work while in dormant mode
+pico_enable_stdio_uart(main 0)
 pico_enable_stdio_usb(main 0)
 
 # Add the standard library to the build
@@ -71,21 +72,20 @@ target_link_libraries(main
         hardware_pio
         hardware_irq
         hardware_interp
+        hardware_rtc
         hardware_timer
         hardware_watchdog
+        hardware_rosc
         hardware_clocks
+        pico_unique_id
         pico_bootsel_via_double_reset
         pico_util_buffer
         pico_multicore
-        #pico_stdio_uart
-        #tinyusb_device
-        #tinyusb_board
-        #oled_ssd1306
         FreeRTOS
+        RF24
         )
 
 target_compile_definitions(main PRIVATE
-        USE_AUDIO_I2S=1
         #PICO_DEFAULT_UART_BAUD_RATE=921600
         )
 
